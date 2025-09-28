@@ -12,54 +12,74 @@ console.log("Authorization code:", code);
 
 let profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks;
 
-if (!code) {
-	console.log("No code, redirecting to auth...");
-	redirectToAuthCodeFlow(clientId);
-} else {
-	console.log("Code found, getting access token...");
-	try {
-		const accessToken = await getAccessToken(clientId, code);
-		console.log("Access token obtained:", accessToken ? "✓" : "✗");
-		
-		if (!accessToken) {
-			console.error("No access token received");
-			return;
-		}
-		
-		profile = await fetchProfile(accessToken);
-		console.log("Profile:", profile);
-		
-		const allUserPlaylistsData = await fetchUserPlaylists(accessToken);
-		console.log("Playlists data:", allUserPlaylistsData);
-		
-		// Protection contre undefined
-		allUserPlaylists = allUserPlaylistsData?.items || [];
-		console.log("Playlists items:", allUserPlaylists);
-		
-		personnalPlaylists = allUserPlaylists.filter(
-			(p) => p?.owner?.display_name === profile?.display_name
-		);
-		console.log("Personal playlists:", personnalPlaylists);
-		
-		const topArtistsData = await fetchUserTopArtists(accessToken);
-		console.log("Top artists data:", topArtistsData);
-		topArtists = topArtistsData?.items || [];
-		
-		const topTracksData = await fetchUserTopTracks(accessToken);
-		console.log("Top tracks data:", topTracksData);
-		topTracks = topTracksData?.items || [];
+// Version corrigée avec fonction async
+console.log("Script started!");
 
-		await populateUI(
-			profile,
-			allUserPlaylists,
-			personnalPlaylists,
-			topArtists,
-			topTracks
-		);
-	} catch (error) {
-		console.error("Error in main flow:", error);
+const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
+const redirectUri = "https://spotify-profile-exu8wfr2x-williams-projects-7100c025.vercel.app/callback";
+
+console.log("Variables defined:", { clientId, redirectUri });
+
+const params = new URLSearchParams(window.location.search);
+const code = params.get("code");
+console.log("Authorization code:", code);
+
+let profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks;
+
+// Fonction principale async
+async function initApp() {
+	if (!code) {
+		console.log("No code, redirecting to auth...");
+		redirectToAuthCodeFlow(clientId);
+	} else {
+		console.log("Code found, getting access token...");
+		try {
+			const accessToken = await getAccessToken(clientId, code);
+			console.log("Access token obtained:", accessToken ? "✓" : "✗");
+			
+			if (!accessToken) {
+				console.error("No access token received");
+				return;
+			}
+			
+			profile = await fetchProfile(accessToken);
+			console.log("Profile:", profile);
+			
+			const allUserPlaylistsData = await fetchUserPlaylists(accessToken);
+			console.log("Playlists data:", allUserPlaylistsData);
+			
+			// Protection contre undefined
+			allUserPlaylists = allUserPlaylistsData?.items || [];
+			console.log("Playlists items:", allUserPlaylists);
+			
+			personnalPlaylists = allUserPlaylists.filter(
+				(p) => p?.owner?.display_name === profile?.display_name
+			);
+			console.log("Personal playlists:", personnalPlaylists);
+			
+			const topArtistsData = await fetchUserTopArtists(accessToken);
+			console.log("Top artists data:", topArtistsData);
+			topArtists = topArtistsData?.items || [];
+			
+			const topTracksData = await fetchUserTopTracks(accessToken);
+			console.log("Top tracks data:", topTracksData);
+			topTracks = topTracksData?.items || [];
+
+			await populateUI(
+				profile,
+				allUserPlaylists,
+				personnalPlaylists,
+				topArtists,
+				topTracks
+			);
+		} catch (error) {
+			console.error("Error in main flow:", error);
+		}
 	}
 }
+
+// Démarrer l'app
+initApp();
 
 export async function redirectToAuthCodeFlow(clientId) {
 	console.log("Starting auth flow...");
