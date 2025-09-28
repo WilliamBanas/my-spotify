@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>My Spotify</title>
+		<script src="./src/index.js" type="module"></script>
+		<link rel="icon" href="./favicon.ico" type="image/x-icon" />
+		<link rel="stylesheet" href="./src/css/reset.css" />
+		<link rel="stylesheet" href="./src/css/index.css" />
+		<link rel="stylesheet" href="./src/css/styles.css" />
+	</head>
+	<body>
+		<header class="header">
+			<img src="./assets/logo/Spotify_Primary_Logo_RGB_White.png" alt="" />
+			<span>My Spotify</span>
+		</header>
+		<div class="wrapper">
+			<section class="content">
+				<div class="content__header-wrapper">
+					<header class="content__header">
+						<div class="userInfos">
+							<span id="avatar"></span>
+							<div class="userInfos__details">
+								<span>Profile</span>
+								<h1 id="displayName"></h1>
+								<ul>
+									<li class="details__product">
+										<img
+											src="./assets/logo/Spotify_Primary_Logo_RGB_Green.png"
+											alt=""
+										/>
+										<span id="product"></span>
+									</li>
+									<li id="playlists"></li>
+									<li id="followers"></li>
+								</ul>
+							</div>
+						</div>
+					</header>
+				</div>
+				<main></main>
+			</section>
+		</div>
+	</body>
+</html>
