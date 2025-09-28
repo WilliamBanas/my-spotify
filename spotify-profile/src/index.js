@@ -1,7 +1,13 @@
 const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const redirectUri = import.meta.env.VITE_REDIRECT_URI;
+
+console.log("Environment variables:");
+console.log("clientId:", clientId);
+console.log("redirectUri:", redirectUri);
+
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
+console.log("Authorization code:", code);
 
 let profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks;
 
@@ -80,6 +86,7 @@ async function generateCodeChallenge(codeVerifier) {
 
 export async function getAccessToken(clientId, code) {
 	const verifier = localStorage.getItem("verifier");
+	console.log("Verifier from localStorage:", verifier);
 
 	const params = new URLSearchParams();
 	params.append("client_id", clientId);
@@ -88,13 +95,24 @@ export async function getAccessToken(clientId, code) {
 	params.append("redirect_uri", redirectUri);
 	params.append("code_verifier", verifier);
 
+	console.log("Token request params:", {
+		client_id: clientId,
+		redirect_uri: redirectUri,
+		code: code,
+		verifier: verifier
+	});
+
 	const result = await fetch("https://accounts.spotify.com/api/token", {
 		method: "POST",
 		headers: { "Content-Type": "application/x-www-form-urlencoded" },
 		body: params,
 	});
 
-	const { access_token } = await result.json();
+	console.log("Token response status:", result.status);
+	const tokenData = await result.json();
+	console.log("Token response data:", tokenData);
+
+	const { access_token } = tokenData;
 	return access_token;
 }
 
