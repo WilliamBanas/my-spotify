@@ -1,5 +1,5 @@
-const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const redirectUri = import.meta.env.VITE_REDIRECT_URI;
+const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID || "4c2a191ee8ff41d0a9775c708fe59c25";
+const redirectUri = import.meta.env.VITE_REDIRECT_URI || "https://spotify-profile-exu8wfr2x-williams-projects-7100c025.vercel.app/callback";
 
 console.log("Environment variables:");
 console.log("clientId:", clientId);
