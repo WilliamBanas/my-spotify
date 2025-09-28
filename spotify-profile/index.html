@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>My Spotify</title>
+		<script src="./src/index.js" type="module"></script>
+		<link rel="icon" href="./favicon.ico" type="image/x-icon" />
+		<link rel="stylesheet" href="./src/css/reset.css" />
+		<link rel="stylesheet" href="./src/css/index.css" />
+		<link rel="stylesheet" href="./src/css/styles.css" />
+	</head>
+	<body>
+		<header class="header">
+			<img src="./assets/logo/Spotify_Primary_Logo_RGB_White.png" alt="" />
+			<span>My Spotify</span>
+		</header>
+		<div class="wrapper">
+			<section class="content">
+					<header class="content__header">
+						<div class="userInfos">
+							<span id="avatar"></span>
+							<div class="userInfos__details">
+								<span>Profile</span>
+								<h1 id="displayName"></h1>
+								<ul>
+									<li class="details__product">
+										<img
+											src="./assets/logo/Spotify_Primary_Logo_RGB_Green.png"
+											alt=""
+										/>
+										<span id="product"></span>
+									</li>
+									<li id="playlists"></li>
+									<li id="followers"></li>
+								</ul>
+							</div>
+						</div>
+					</header>
+				<div class="content__main">
+          <div class="artists">
+            <div class="artists__title">
+              <h2>Top artists of the month</h2>
+              <span id="allArtistsButton">View all</span>
+            </div>
+            <ul id="artists__list">
+            </ul>
+          </div>
+
+          <div class="tracks">
+            <div class="tracks__title">
+              <h2>Top tracks of the month</h2>
+              <span id="allTracksButton">View all</span>
+            </div>
+            <ul id="tracks__list">
+            </ul>
+          </div>
+        </div>
+			</section>
+		</div>
+	</body>
+</html>
