@@ -9,16 +9,25 @@ if (!code) {
 	redirectToAuthCodeFlow(clientId);
 } else {
 	const accessToken = await getAccessToken(clientId, code);
+	console.log("Access token:", accessToken);
+	
 	profile = await fetchProfile(accessToken);
+	console.log("Profile:", profile);
+	
 	const allUserPlaylistsData = await fetchUserPlaylists(accessToken);
-	allUserPlaylists = allUserPlaylistsData.items;
+	console.log("Playlists data:", allUserPlaylistsData);
+	allUserPlaylists = allUserPlaylistsData?.items || [];
 	personnalPlaylists = allUserPlaylists.filter(
-		(p) => p.owner.display_name === profile.display_name
+		(p) => p?.owner?.display_name === profile?.display_name
 	);
+	
 	const topArtistsData = await fetchUserTopArtists(accessToken);
-	topArtists = topArtistsData ? topArtistsData.items : [];
+	console.log("Top artists data:", topArtistsData);
+	topArtists = topArtistsData?.items || [];
+	
 	const topTracksData = await fetchUserTopTracks(accessToken);
-	topTracks = topTracksData ? topTracksData.items : [];
+	console.log("Top tracks data:", topTracksData);
+	topTracks = topTracksData?.items || [];
 
 	await populateUI(
 		profile,
