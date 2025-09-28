@@ -1,7 +1,7 @@
 console.log("Script started!");
 
-const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
-const redirectUri = "http://127.0.0.1:5173/callback"; // à changer selon le déploiement
+const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const redirectUri = import.meta.env.VITE_REDIRECT_URI;
 
 console.log("Variables defined:", { clientId, redirectUri });
 
@@ -87,7 +87,7 @@ async function initApp() {
 
 initApp();
 
-export async function redirectToAuthCodeFlow(clientId) {
+export async function redirectToAuthCodeFlow(clientId, redirectUri) {
   const verifier = generateCodeVerifier(128);
   const challenge = await generateCodeChallenge(verifier);
   localStorage.setItem("verifier", verifier);
