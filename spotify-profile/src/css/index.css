@@ -1,7 +1,7 @@
 body {
 	font-family: "Gotham", Arial, sans-serif;
 	font-weight: 400;
-	font-size: var(--font-size-sm);
+	font-size: var(--font-size-base);
 	background-color: var(--primary-background);
 	color: var(--text);
 }
@@ -43,13 +43,18 @@ h3 {
 .content {
 	background-color: var(--secondary-background);
 	border-radius: 8px;
-	height: 2000px;
-	overflow-x: hidden;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 
 .content__header {
+	width: 100%;
 	display: flex;
 	flex-direction: column;
+	align-items: flex-start;
+	box-sizing: border-box;
 	padding: var(--spacing-3xl) var(--spacing-3xl) var(--spacing-base)
 		var(--spacing-2xl);
 }
@@ -91,9 +96,134 @@ h3 {
 	display: flex;
 	gap: 1em;
 	margin-top: var(--spacing-base);
+	font-size: var(--font-size-sm);
 }
 
-#playlists, .details__product {
-  color: var(--text-subdued);
+#playlists,
+.details__product {
+	color: var(--text-subdued);
 }
 
+.content__main {
+	width: 100%;
+	padding: var(--spacing-3xl) var(--spacing-xl) var(--spacing-xl)
+		var(--spacing-xl);
+	box-sizing: border-box;
+}
+
+.artists,
+.tracks {
+}
+
+.artists__title,
+.tracks__title {
+	padding: var(--spacing-3xl) 0 var(--spacing-xl);
+	display: flex;
+	align-items: end;
+	justify-content: space-between;
+}
+
+.artists__title span,
+.tracks__title span {
+  font-weight: 700;
+	color: var(--text-subdued);
+	font-size: var(--font-size-sm);
+}
+
+.artists__title span:hover,
+.tracks__title span:hover {
+  font-weight: 700;
+	color: var(--text-subdued);
+	font-size: var(--font-size-sm);
+	text-decoration: underline;
+	cursor: pointer;
+}
+
+.artists__title h2,
+.tracks__title h2 {
+	font-size: var(--font-size-xl);
+  font-weight: 700;
+}
+
+#artists__list {
+	width: 100%;
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+#artists__list > li {
+	font-size: 16px;
+	width: 100%;
+}
+
+#artists__list li > div:first-child {
+	padding: var(--spacing-base);
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	gap: 1em;
+}
+
+.divAvatar {
+	aspect-ratio: 1/1;
+	position: relative;
+}
+
+.divAvatar img {
+	height: 100%;
+	width: 100%;
+	display: block;
+	border-radius: 50%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+		rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+		rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+.divTitle {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5em;
+	font-size: var(--font-size-base);
+}
+
+.divTitle__type {
+	color: var(--text-subdued);
+	text-transform: capitalize;
+}
+
+#artists__list {
+  grid-template-columns: repeat(7, 1fr);
+}
+
+@media (max-width: 1378px) {
+  #artists__list {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  #artists__list {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (max-width: 1017px) {
+  #artists__list {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 830px) {
+  #artists__list {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  #artists__list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
