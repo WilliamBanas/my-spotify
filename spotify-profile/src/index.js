@@ -1,65 +1,83 @@
-// index.js - Version sécurisée et corrigée
 console.log("Script started!");
 
 const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
-const redirectUri = "https://spotify-profile-exu8wfr2x-williams-projects-7100c025.vercel.app/callback";
+const redirectUri = "http://127.0.0.1:5173/callback"; // à changer selon le déploiement
 
 console.log("Variables defined:", { clientId, redirectUri });
 
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
-console.log("Authorization code:", code);
 
-let profile = null;
-let allUserPlaylists = [];
-let personnalPlaylists = [];
-let topArtists = [];
-let topTracks = [];
+let tokenData = JSON.parse(localStorage.getItem("spotify_token")) || null;
+let profile = JSON.parse(localStorage.getItem("spotify_profile")) || null;
+let allUserPlaylists = JSON.parse(localStorage.getItem("allUserPlaylists")) || [];
+let personnalPlaylists = JSON.parse(localStorage.getItem("personnalPlaylists")) || [];
+let topArtists = JSON.parse(localStorage.getItem("topArtists")) || [];
+let topTracks = JSON.parse(localStorage.getItem("topTracks")) || [];
 
-// Fonction principale async
+function isTokenValid() {
+  if (!tokenData) return false;
+  const now = Date.now();
+  return tokenData.expires_at && tokenData.expires_at > now;
+}
+
+function saveToken(token, expires_in) {
+  tokenData = {
+    access_token: token,
+    expires_at: Date.now() + expires_in * 1000
+  };
+  localStorage.setItem("spotify_token", JSON.stringify(tokenData));
+}
+
 async function initApp() {
-  if (!code) {
-    console.log("No code, redirecting to auth...");
-    return redirectToAuthCodeFlow(clientId);
-  }
-
   try {
-    console.log("Code found, getting access token...");
-    const accessToken = await getAccessToken(clientId, code);
-
-    if (!accessToken) {
-      console.error("No access token received. Check redirectUri & Spotify app settings.");
-      return;
+    if (!isTokenValid() && !code) {
+      console.log("Token missing or expired, redirecting to auth...");
+      return redirectToAuthCodeFlow(clientId);
     }
-    console.log("Access token obtained ✓");
 
-    // FETCH PROFILE
-    profile = await fetchProfile(accessToken);
-    if (!profile) console.warn("No profile data returned from Spotify API.");
-    else console.log("Profile fetched:", profile);
+    if (!isTokenValid() && code) {
+      console.log("Code found, getting access token...");
+      const newTokenData = await getAccessToken(clientId, code);
+      if (!newTokenData?.access_token) {
+        console.error("Failed to get access token.");
+        return redirectToAuthCodeFlow(clientId);
+      }
+      saveToken(newTokenData.access_token, newTokenData.expires_in);
+      console.log("Access token obtained ✓");
+    }
 
-    // FETCH PLAYLISTS
-    const allUserPlaylistsData = await fetchUserPlaylists(accessToken);
-    allUserPlaylists = Array.isArray(allUserPlaylistsData?.items) ? allUserPlaylistsData.items : [];
-    console.log(`Found ${allUserPlaylists.length} playlists.`);
+    const accessToken = tokenData.access_token;
 
-    // Personal playlists (sécurisé avec profile et tableau défini)
-    personnalPlaylists = (profile && allUserPlaylists.length > 0)
+    if (!profile) {
+      profile = await fetchProfile(accessToken);
+      if (!profile) console.warn("No profile data returned.");
+      else localStorage.setItem("spotify_profile", JSON.stringify(profile));
+    }
+
+    if (!allUserPlaylists.length) {
+      const playlistsData = await fetchUserPlaylists(accessToken);
+      allUserPlaylists = Array.isArray(playlistsData?.items) ? playlistsData.items : [];
+      localStorage.setItem("allUserPlaylists", JSON.stringify(allUserPlaylists));
+    }
+
+    personnalPlaylists = (profile?.display_name && Array.isArray(allUserPlaylists))
       ? allUserPlaylists.filter(p => p?.owner?.display_name === profile.display_name)
       : [];
-    console.log(`Found ${personnalPlaylists.length} personal playlists.`);
+    localStorage.setItem("personnalPlaylists", JSON.stringify(personnalPlaylists));
 
-    // FETCH TOP ARTISTS
-    const topArtistsData = await fetchUserTopArtists(accessToken);
-    topArtists = Array.isArray(topArtistsData?.items) ? topArtistsData.items : [];
-    console.log(`Found ${topArtists.length} top artists.`);
+    if (!topArtists.length) {
+      const artistsData = await fetchUserTopArtists(accessToken);
+      topArtists = Array.isArray(artistsData?.items) ? artistsData.items : [];
+      localStorage.setItem("topArtists", JSON.stringify(topArtists));
+    }
 
-    // FETCH TOP TRACKS
-    const topTracksData = await fetchUserTopTracks(accessToken);
-    topTracks = Array.isArray(topTracksData?.items) ? topTracksData.items : [];
-    console.log(`Found ${topTracks.length} top tracks.`);
+    if (!topTracks.length) {
+      const tracksData = await fetchUserTopTracks(accessToken);
+      topTracks = Array.isArray(tracksData?.items) ? tracksData.items : [];
+      localStorage.setItem("topTracks", JSON.stringify(topTracks));
+    }
 
-    // POPULATE UI
     await populateUI(profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks);
 
   } catch (error) {
@@ -67,10 +85,8 @@ async function initApp() {
   }
 }
 
-// Démarrer l'app
 initApp();
 
-// ================= AUTH FLOW =================
 export async function redirectToAuthCodeFlow(clientId) {
   const verifier = generateCodeVerifier(128);
   const challenge = await generateCodeChallenge(verifier);
@@ -101,7 +117,6 @@ async function generateCodeChallenge(codeVerifier) {
     .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// ================= TOKEN =================
 export async function getAccessToken(clientId, code) {
   const verifier = localStorage.getItem("verifier");
   if (!verifier) {
@@ -126,67 +141,53 @@ export async function getAccessToken(clientId, code) {
       console.error("Token request failed with status", result.status);
       return null;
     }
-    const tokenData = await result.json();
-    return tokenData.access_token;
+    return await result.json(); // contient access_token + expires_in
   } catch (error) {
     console.error("Error getting access token:", error);
     return null;
   }
 }
 
-// ================= FETCH HELPERS =================
 async function fetchProfile(token) {
   try {
-    const result = await fetch("https://api.spotify.com/v1/me", {
+    const res = await fetch("https://api.spotify.com/v1/me", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) {
-      console.error("Profile fetch failed:", result.status);
-      return null;
-    }
-    return await result.json();
-  } catch {
-    return null;
-  }
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
 }
 
 async function fetchUserPlaylists(token) {
   try {
-    const result = await fetch("https://api.spotify.com/v1/me/playlists", {
+    const res = await fetch("https://api.spotify.com/v1/me/playlists", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) return { items: [] };
-    return await result.json();
-  } catch {
-    return { items: [] };
-  }
+    if (!res.ok) return { items: [] };
+    return await res.json();
+  } catch { return { items: [] }; }
 }
 
 async function fetchUserTopArtists(token) {
   try {
-    const result = await fetch("https://api.spotify.com/v1/me/top/artists?time_range=short_term", {
+    const res = await fetch("https://api.spotify.com/v1/me/top/artists?time_range=short_term", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) return { items: [] };
-    return await result.json();
-  } catch {
-    return { items: [] };
-  }
+    if (!res.ok) return { items: [] };
+    return await res.json();
+  } catch { return { items: [] }; }
 }
 
 async function fetchUserTopTracks(token) {
   try {
-    const result = await fetch("https://api.spotify.com/v1/me/top/tracks?time_range=short_term", {
+    const res = await fetch("https://api.spotify.com/v1/me/top/tracks?time_range=short_term", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) return { items: [] };
-    return await result.json();
-  } catch {
-    return { items: [] };
-  }
+    if (!res.ok) return { items: [] };
+    return await res.json();
+  } catch { return { items: [] }; }
 }
 
-// ================= UI HELPERS =================
 function getArtistsToDisplay() {
   const w = window.innerWidth;
   if (w < 768) return 2;
@@ -199,10 +200,9 @@ function getArtistsToDisplay() {
 
 function renderArtists(topArtists) {
   const artistsList = document.getElementById("artists__list");
-  if (!artistsList) return;
+  if (!artistsList || !Array.isArray(topArtists)) return;
   artistsList.innerHTML = "";
-  const toShow = getArtistsToDisplay();
-  (topArtists || []).slice(0, toShow).forEach(artist => {
+  topArtists.slice(0, getArtistsToDisplay()).forEach(artist => {
     const li = document.createElement("li");
     const div = document.createElement("div");
     if (artist.images?.[0]) {
@@ -254,16 +254,16 @@ async function populateUI(profile, allUserPlaylists, personnalPlaylists, topArti
     : `${profile.followers?.total || 0} follower`;
 
   const playlistsEl = document.getElementById("playlists");
-  if (playlistsEl) playlistsEl.innerText = (personnalPlaylists?.length || 0) > 1
+  if (playlistsEl) playlistsEl.innerText = (Array.isArray(personnalPlaylists) ? personnalPlaylists.length : 0) > 1
     ? `${personnalPlaylists.length} public playlists`
     : `${personnalPlaylists?.length || 0} public playlist`;
 
-  if ((topArtists || []).length) renderArtists(topArtists);
+  if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
 
   const tracksList = document.getElementById("tracks__list");
-  if (tracksList && (topTracks || []).length) {
+  if (tracksList && Array.isArray(topTracks) && topTracks.length) {
     tracksList.innerHTML = "";
-    (topTracks || []).forEach(track => {
+    topTracks.forEach(track => {
       const li = document.createElement("li");
       if (track.album?.images?.[0]) {
         const img = new Image(100, 100);
@@ -280,7 +280,6 @@ async function populateUI(profile, allUserPlaylists, personnalPlaylists, topArti
   }
 }
 
-// ================= EVENTS =================
 window.addEventListener("resize", () => {
-  if ((topArtists || []).length) renderArtists(topArtists);
+  if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
 });
