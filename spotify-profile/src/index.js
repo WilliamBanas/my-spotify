@@ -1,17 +1,3 @@
-// Version simplifiée pour déboguer
-console.log("Script started!");
-
-const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
-const redirectUri = "https://spotify-profile-exu8wfr2x-williams-projects-7100c025.vercel.app/callback";
-
-console.log("Variables defined:", { clientId, redirectUri });
-
-const params = new URLSearchParams(window.location.search);
-const code = params.get("code");
-console.log("Authorization code:", code);
-
-let profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks;
-
 // Version corrigée avec fonction async
 console.log("Script started!");
 
