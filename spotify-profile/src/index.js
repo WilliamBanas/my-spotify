@@ -1,4 +1,5 @@
-const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
+const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const redirectUri = import.meta.env.VITE_REDIRECT_URI;
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
 
@@ -37,7 +38,7 @@ export async function redirectToAuthCodeFlow(clientId) {
 	const params = new URLSearchParams();
 	params.append("client_id", clientId);
 	params.append("response_type", "code");
-	params.append("redirect_uri", "http://127.0.0.1:5173/callback");
+	params.append("redirect_uri", redirectUri);
 	params.append(
 		"scope",
 		"user-read-private user-read-email user-top-read playlist-read-private"
@@ -75,7 +76,7 @@ export async function getAccessToken(clientId, code) {
 	params.append("client_id", clientId);
 	params.append("grant_type", "authorization_code");
 	params.append("code", code);
-	params.append("redirect_uri", "http://127.0.0.1:5173/callback");
+	params.append("redirect_uri", redirectUri);
 	params.append("code_verifier", verifier);
 
 	const result = await fetch("https://accounts.spotify.com/api/token", {
