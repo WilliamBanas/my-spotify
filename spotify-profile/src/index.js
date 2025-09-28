@@ -1,4 +1,4 @@
-// index.js - Version sécurisée
+// index.js - Version sécurisée et corrigée
 console.log("Script started!");
 
 const clientId = "4c2a191ee8ff41d0a9775c708fe59c25";
@@ -35,31 +35,28 @@ async function initApp() {
 
     // FETCH PROFILE
     profile = await fetchProfile(accessToken);
-    if (!profile) {
-      console.warn("No profile data returned from Spotify API.");
-    } else {
-      console.log("Profile fetched:", profile);
-    }
+    if (!profile) console.warn("No profile data returned from Spotify API.");
+    else console.log("Profile fetched:", profile);
 
     // FETCH PLAYLISTS
     const allUserPlaylistsData = await fetchUserPlaylists(accessToken);
-    allUserPlaylists = allUserPlaylistsData?.items || [];
+    allUserPlaylists = Array.isArray(allUserPlaylistsData?.items) ? allUserPlaylistsData.items : [];
     console.log(`Found ${allUserPlaylists.length} playlists.`);
 
-    // Personal playlists
-    personnalPlaylists = profile
+    // Personal playlists (sécurisé avec profile et tableau défini)
+    personnalPlaylists = (profile && allUserPlaylists.length > 0)
       ? allUserPlaylists.filter(p => p?.owner?.display_name === profile.display_name)
       : [];
     console.log(`Found ${personnalPlaylists.length} personal playlists.`);
 
     // FETCH TOP ARTISTS
     const topArtistsData = await fetchUserTopArtists(accessToken);
-    topArtists = topArtistsData?.items || [];
+    topArtists = Array.isArray(topArtistsData?.items) ? topArtistsData.items : [];
     console.log(`Found ${topArtists.length} top artists.`);
 
     // FETCH TOP TRACKS
     const topTracksData = await fetchUserTopTracks(accessToken);
-    topTracks = topTracksData?.items || [];
+    topTracks = Array.isArray(topTracksData?.items) ? topTracksData.items : [];
     console.log(`Found ${topTracks.length} top tracks.`);
 
     // POPULATE UI
@@ -75,20 +72,15 @@ initApp();
 
 // ================= AUTH FLOW =================
 export async function redirectToAuthCodeFlow(clientId) {
-  console.log("Starting auth flow...");
   const verifier = generateCodeVerifier(128);
   const challenge = await generateCodeChallenge(verifier);
-
   localStorage.setItem("verifier", verifier);
 
   const params = new URLSearchParams();
   params.append("client_id", clientId);
   params.append("response_type", "code");
   params.append("redirect_uri", redirectUri);
-  params.append(
-    "scope",
-    "user-read-private user-read-email user-top-read playlist-read-private"
-  );
+  params.append("scope", "user-read-private user-read-email user-top-read playlist-read-private");
   params.append("code_challenge_method", "S256");
   params.append("code_challenge", challenge);
 
@@ -98,24 +90,19 @@ export async function redirectToAuthCodeFlow(clientId) {
 function generateCodeVerifier(length) {
   let text = "";
   const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  for (let i = 0; i < length; i++) {
-    text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
+  for (let i = 0; i < length; i++) text += possible.charAt(Math.floor(Math.random() * possible.length));
   return text;
 }
 
 async function generateCodeChallenge(codeVerifier) {
   const data = new TextEncoder().encode(codeVerifier);
   const digest = await window.crypto.subtle.digest("SHA-256", data);
-  return btoa(String.fromCharCode.apply(null, [...new Uint8Array(digest)]))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  return btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
 // ================= TOKEN =================
 export async function getAccessToken(clientId, code) {
-  console.log("Getting access token...");
   const verifier = localStorage.getItem("verifier");
   if (!verifier) {
     console.error("No verifier found in localStorage.");
@@ -135,17 +122,12 @@ export async function getAccessToken(clientId, code) {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: params,
     });
-
-    console.log("Token response status:", result.status);
     if (!result.ok) {
       console.error("Token request failed with status", result.status);
       return null;
     }
-
     const tokenData = await result.json();
-    console.log("Token data:", tokenData);
     return tokenData.access_token;
-
   } catch (error) {
     console.error("Error getting access token:", error);
     return null;
@@ -163,8 +145,7 @@ async function fetchProfile(token) {
       return null;
     }
     return await result.json();
-  } catch (error) {
-    console.error("Error fetching profile:", error);
+  } catch {
     return null;
   }
 }
@@ -174,13 +155,9 @@ async function fetchUserPlaylists(token) {
     const result = await fetch("https://api.spotify.com/v1/me/playlists", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) {
-      console.error("Playlists fetch failed:", result.status);
-      return { items: [] };
-    }
+    if (!result.ok) return { items: [] };
     return await result.json();
-  } catch (error) {
-    console.error("Error fetching playlists:", error);
+  } catch {
     return { items: [] };
   }
 }
@@ -190,13 +167,9 @@ async function fetchUserTopArtists(token) {
     const result = await fetch("https://api.spotify.com/v1/me/top/artists?time_range=short_term", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) {
-      console.error("Top artists fetch failed:", result.status);
-      return { items: [] };
-    }
+    if (!result.ok) return { items: [] };
     return await result.json();
-  } catch (error) {
-    console.error("Error fetching top artists:", error);
+  } catch {
     return { items: [] };
   }
 }
@@ -206,47 +179,40 @@ async function fetchUserTopTracks(token) {
     const result = await fetch("https://api.spotify.com/v1/me/top/tracks?time_range=short_term", {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!result.ok) {
-      console.error("Top tracks fetch failed:", result.status);
-      return { items: [] };
-    }
+    if (!result.ok) return { items: [] };
     return await result.json();
-  } catch (error) {
-    console.error("Error fetching top tracks:", error);
+  } catch {
     return { items: [] };
   }
 }
 
 // ================= UI HELPERS =================
 function getArtistsToDisplay() {
-  const width = window.innerWidth;
-  if (width < 768) return 2;
-  if (width < 830) return 3;
-  if (width < 1017) return 4;
-  if (width < 1200) return 5;
-  if (width < 1378) return 6;
+  const w = window.innerWidth;
+  if (w < 768) return 2;
+  if (w < 830) return 3;
+  if (w < 1017) return 4;
+  if (w < 1200) return 5;
+  if (w < 1378) return 6;
   return 7;
 }
 
 function renderArtists(topArtists) {
   const artistsList = document.getElementById("artists__list");
   if (!artistsList) return;
-
   artistsList.innerHTML = "";
-  const artistsToShow = getArtistsToDisplay();
-  topArtists.slice(0, artistsToShow).forEach(artist => {
+  const toShow = getArtistsToDisplay();
+  (topArtists || []).slice(0, toShow).forEach(artist => {
     const li = document.createElement("li");
-    const divContainer = document.createElement("div");
-
+    const div = document.createElement("div");
     if (artist.images?.[0]) {
-      const artistImage = new Image();
-      artistImage.src = artist.images[0].url;
+      const img = new Image();
+      img.src = artist.images[0].url;
       const divAvatar = document.createElement("div");
       divAvatar.className = "divAvatar";
-      divAvatar.appendChild(artistImage);
-      divContainer.appendChild(divAvatar);
+      divAvatar.appendChild(img);
+      div.appendChild(divAvatar);
     }
-
     const divTitle = document.createElement("div");
     divTitle.className = "divTitle";
     const spanName = document.createElement("span");
@@ -257,16 +223,13 @@ function renderArtists(topArtists) {
     spanType.innerText = artist.type || "artist";
     divTitle.appendChild(spanName);
     divTitle.appendChild(spanType);
-    divContainer.appendChild(divTitle);
-
-    li.appendChild(divContainer);
+    div.appendChild(divTitle);
+    li.appendChild(div);
     artistsList.appendChild(li);
   });
 }
 
 async function populateUI(profile, allUserPlaylists, personnalPlaylists, topArtists, topTracks) {
-  console.log("Populating UI...");
-
   if (!profile) return;
 
   const displayNameEl = document.getElementById("displayName");
@@ -275,10 +238,10 @@ async function populateUI(profile, allUserPlaylists, personnalPlaylists, topArti
   if (profile.images?.[0]) {
     const avatarEl = document.getElementById("avatar");
     if (avatarEl) {
-      const profileImage = new Image(150, 150);
-      profileImage.src = profile.images[0].url;
       avatarEl.innerHTML = "";
-      avatarEl.appendChild(profileImage);
+      const img = new Image(150, 150);
+      img.src = profile.images[0].url;
+      avatarEl.appendChild(img);
     }
   }
 
@@ -286,45 +249,38 @@ async function populateUI(profile, allUserPlaylists, personnalPlaylists, topArti
   if (productEl) productEl.innerText = profile.product === "premium" ? "Premium" : "Free plan";
 
   const followersEl = document.getElementById("followers");
-  if (followersEl) {
-    const count = profile.followers?.total || 0;
-    followersEl.innerText = count > 1 ? `${count} followers` : `${count} follower`;
-  }
+  if (followersEl) followersEl.innerText = profile.followers?.total > 1
+    ? `${profile.followers.total} followers`
+    : `${profile.followers?.total || 0} follower`;
 
   const playlistsEl = document.getElementById("playlists");
-  if (playlistsEl) {
-    const count = personnalPlaylists?.length || 0;
-    playlistsEl.innerText = count > 1 ? `${count} public playlists` : `${count} public playlist`;
-  }
+  if (playlistsEl) playlistsEl.innerText = (personnalPlaylists?.length || 0) > 1
+    ? `${personnalPlaylists.length} public playlists`
+    : `${personnalPlaylists?.length || 0} public playlist`;
 
-  if (topArtists.length > 0) renderArtists(topArtists);
+  if ((topArtists || []).length) renderArtists(topArtists);
 
-  if (topTracks.length > 0) {
-    const tracksList = document.getElementById("tracks__list");
-    if (tracksList) {
-      tracksList.innerHTML = "";
-      topTracks.forEach(track => {
-        const li = document.createElement("li");
-
-        if (track.album?.images?.[0]) {
-          const albumImage = new Image(100, 100);
-          albumImage.src = track.album.images[0].url;
-          const spanAvatar = document.createElement("span");
-          spanAvatar.appendChild(albumImage);
-          li.appendChild(spanAvatar);
-        }
-
-        const title = document.createElement("p");
-        title.innerText = track.name || "Unknown Track";
-        li.appendChild(title);
-
-        tracksList.appendChild(li);
-      });
-    }
+  const tracksList = document.getElementById("tracks__list");
+  if (tracksList && (topTracks || []).length) {
+    tracksList.innerHTML = "";
+    (topTracks || []).forEach(track => {
+      const li = document.createElement("li");
+      if (track.album?.images?.[0]) {
+        const img = new Image(100, 100);
+        img.src = track.album.images[0].url;
+        const span = document.createElement("span");
+        span.appendChild(img);
+        li.appendChild(span);
+      }
+      const title = document.createElement("p");
+      title.innerText = track.name || "Unknown Track";
+      li.appendChild(title);
+      tracksList.appendChild(li);
+    });
   }
 }
 
 // ================= EVENTS =================
 window.addEventListener("resize", () => {
-  if (topArtists.length > 0) renderArtists(topArtists);
+  if ((topArtists || []).length) renderArtists(topArtists);
 });
