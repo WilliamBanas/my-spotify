@@ -1,9 +1,8 @@
-console.log("Script started!");
+console.log("Variables defined:", import.meta.env.VITE_SPOTIFY_CLIENT_ID);
+console.log("Variables defined:", import.meta.env.VITE_REDIRECT_URI);
 
 const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const redirectUri = import.meta.env.VITE_REDIRECT_URI;
-
-console.log("Variables defined:", { clientId, redirectUri });
 
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
@@ -33,7 +32,7 @@ async function initApp() {
   try {
     if (!isTokenValid() && !code) {
       console.log("Token missing or expired, redirecting to auth...");
-      return redirectToAuthCodeFlow(clientId);
+      return redirectToAuthCodeFlow(clientId, redirectUri);
     }
 
     if (!isTokenValid() && code) {
