@@ -26,8 +26,9 @@
 	--primary-background: #000000;
 	--secondary-background: #181818;
 	--accent: #1db954;
+	--primary: rgba(255, 255, 255, 1);
 	--text: rgba(255, 255, 255, 1);
-  --text-subdued: rgba(255, 255, 255, 0.7);
+	--text-subdued: rgba(255, 255, 255, 0.7);
 
 	--font-size-xs: 0.75em;
 	--font-size-sm: 0.875em;
