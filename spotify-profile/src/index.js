@@ -42,7 +42,7 @@ async function initApp() {
 			const newTokenData = await getAccessToken(clientId, code);
 			if (!newTokenData?.access_token) {
 				console.error("Failed to get access token.");
-				return redirectToAuthCodeFlow(clientId);
+				return redirectToAuthCodeFlow(clientId, redirectUri);
 			}
 			saveToken(newTokenData.access_token, newTokenData.expires_in);
 			console.log("Access token obtained ✓");
