@@ -60,7 +60,7 @@ cd my-spotify
 
 ### 3. Configuration des variables d'environnement
 
-Créez un fichier `.env` à la racine du projet avec les variables suivantes :
+Créez un fichier `.env` à la racine du projet (dans spotify-profile/) avec les variables suivantes :
 
 ```env
 VITE_SPOTIFY_CLIENT_ID=votre_client_id_spotify
@@ -90,18 +90,6 @@ npm run dev
 ```
 L'application sera accessible à l'adresse `http://localhost:5173`
 
-### Build de production
-Compile l'application pour la production :
-```bash
-npm run build
-```
-Les fichiers optimisés seront générés dans le dossier `dist/`
-
-### Prévisualisation du build
-Prévisualise le build de production localement :
-```bash
-npm run preview
-```
 
 ## 📁 Structure du projet
 
