@@ -165,7 +165,7 @@ export async function getAccessToken(clientId, code) {
 			console.error("Token request failed with status", result.status);
 			return null;
 		}
-		return await result.json(); // contient access_token + expires_in
+		return await result.json();
 	} catch (error) {
 		console.error("Error getting access token:", error);
 		return null;
@@ -324,8 +324,8 @@ function renderPlaylists(personnalPlaylists, profile) {
 		.slice(0, 6)
 		.forEach((playlist) => {
 			const li = document.createElement("li");
-      const divWrapper = document.createElement("div");
-      li.appendChild(divWrapper);
+			const divWrapper = document.createElement("div");
+			li.appendChild(divWrapper);
 			if (playlist.images?.[0]) {
 				const img = new Image(180, 180);
 				img.src = playlist.images[0].url;
@@ -393,8 +393,110 @@ async function populateUI(
 
 	if (Array.isArray(personnalPlaylists) && personnalPlaylists.length)
 		renderPlaylists(personnalPlaylists, profile);
+
+	const gradients = [
+		{ color: "linear-gradient(180deg, #5B4B8A 0%, #2D1B4E 100%)" },
+		{ color: "linear-gradient(180deg, #3D5A80 0%, #1A2332 100%)" },
+		{ color: "linear-gradient(180deg, #4A6B5C 0%, #1E2F26 100%)" },
+		{ color: "linear-gradient(180deg, #6B3E5A 0%, #2E1A26 100%)" },
+		{ color: "linear-gradient(180deg, #576574 0%, #242B33 100%)" },
+		{ color: "linear-gradient(180deg, #3D6B6B 0%, #1A2E2E 100%)" },
+		{ color: "linear-gradient(180deg, #6B5444 0%, #2E231C 100%)" },
+		{ color: "linear-gradient(180deg, #4A5F7F 0%, #1F2937 100%)" },
+	];
+
+	const editBackgroundButton = document.getElementById("edit__button");
+	const modal = document.getElementById("modal");
+
+	editBackgroundButton.addEventListener("click", function (e) {
+		e.stopPropagation();
+		modal.classList.toggle("modal-showed");
+	});
+
+	modal.addEventListener("click", function (e) {
+		e.stopPropagation();
+	});
+
+	const colorList = document.getElementById("colors__list");
+	let savedGradients =
+		JSON.parse(localStorage.getItem("selectedGradients")) || [];
+	gradients.forEach((gradient) => {
+		const li = document.createElement("li");
+		const spanColor = document.createElement("span");
+
+		const normalizeGradient = (grad) => grad.replace(/\s+/g, " ").trim();
+
+    // si la condition est bonne retourne true
+		const isSelected = savedGradients.some(
+			(saved) => normalizeGradient(saved) === normalizeGradient(gradient.color)
+		);
+
+		if (isSelected) {
+			spanColor.style.outline = "2px solid var(--text)";
+		}
+
+		spanColor.addEventListener("click", function (e) {
+      let savedGradients = JSON.parse(localStorage.getItem("selectedGradients")) || [];
+      // retourne l'index du premier élément qui correspond sinon retourne -1
+			const index = savedGradients.findIndex(
+      saved => normalizeGradient(saved) === normalizeGradient(gradient.color)
+    );
+    
+    if (index === -1) {
+      savedGradients.push(gradient.color);
+      spanColor.style.outline = "1px solid var(--text)";
+    } else {
+      savedGradients.splice(index, 1);
+      spanColor.style.outline = "none";
+    }
+    
+    localStorage.setItem("selectedGradients", JSON.stringify(savedGradients));
+    startBackgroundRotation();
+		});
+		spanColor.style.background = gradient.color;
+		li.appendChild(spanColor);
+		colorList.appendChild(li);
+	});
+
+	let currentIndex = 0;
+	let intervalId = null;
+
+	function startBackgroundRotation() {
+    let savedGradients = JSON.parse(localStorage.getItem("selectedGradients")) || [];
+
+		if (intervalId) clearInterval(intervalId);
+
+    const background = document.getElementById("background");
+
+    if (!savedGradients.length) {
+        background.style.background = "none";
+        currentIndex = 0;
+        return;
+    }
+
+    if (currentIndex >= savedGradients.length) {
+        currentIndex = 0;
+    }
+
+		background.style.background = savedGradients[currentIndex];
+		
+		// si il y a plus d'un item dans le tableau
+		// on met un intervale de 5 sec
+		// on passe a l'index suivant et si le modulo de current index + 1 est égal a 0
+		// alors on revient au premier index du tableau
+		if (savedGradients.length > 1) {
+			intervalId = setInterval(() => {
+				currentIndex = (currentIndex + 1) % savedGradients.length;
+				background.style.background = savedGradients[currentIndex];
+			}, 5000);
+		}
+	}
+
+	startBackgroundRotation();
 }
 
 window.addEventListener("resize", () => {
 	if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
 });
+
+// https://accounts.spotify.com/authorize?client_id=4c2a191ee8ff41d0a9775c708fe59c25&response_type=code&redirect_uri=undefined&scope=user-read-private+user-read-email+user-top-read+playlist-read-private&code_challenge_method=S256&code_challenge=hdc_gOKdZv8KHOoB43rZ9vO9qcjxmnYzjNxLWgH742Q

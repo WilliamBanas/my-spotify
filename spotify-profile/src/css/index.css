@@ -57,6 +57,90 @@ h3 {
 	box-sizing: border-box;
 	padding: var(--spacing-3xl) var(--spacing-3xl) var(--spacing-base)
 		var(--spacing-2xl);
+  position: relative;
+  z-index: 1;
+}
+
+#background {
+  position: absolute;
+  width: 100%;
+  height: 120%;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.edit {
+  position: absolute;
+  border-radius: 50%;
+  top: 0;
+  right: 0;
+  padding: var(--spacing-base);
+}
+
+.edit > button {
+  position: relative;
+  background: none;
+  border: none;
+}
+
+#edit__logo {
+  width: 25px;
+  height: 25px;
+  padding: var(--spacing-sm);
+  opacity: 0.7;
+}
+
+#edit__logo {
+  opacity: 1;
+}
+
+.modal {
+  display: none;
+  position: absolute;
+  right: 100%;
+  bottom: 1;
+  background-color: var(--secondary-background);
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+		rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+		rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+.modal-showed {
+  display: block;
+  position: absolute;
+  bottom: 1;
+  right: 0;
+  background-color: var(--secondary-background);
+  border-radius: 8px;
+  box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
+		rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
+		rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+#colors__list {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  padding: var(--spacing-sm);
+  box-sizing: border-box;
+}
+
+#colors__list > li {
+  padding: var(--spacing-xs);
+}
+
+#colors__list > li > span {
+  display: block;
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+}
+
+#colors__list > li > span:hover {
+  outline: 1px solid var(--text-subdued);
 }
 
 .userInfos {
@@ -75,11 +159,13 @@ h3 {
 	flex-direction: column;
 	justify-content: flex-end;
 	padding: 0 var(--spacing-xl);
+  
 }
 
 .userInfos__details > h1 {
 	font-size: var(--font-size-ultra);
 	margin-top: var(--spacing-base);
+  border-radius: 100%;
 }
 
 .details__product {
@@ -282,8 +368,9 @@ h3 {
 	margin-top: var(--spacing-sm);
 }
 
-#playlists__list div > span {
+#playlists__list div > span:nth-child(2) {
 	font-size: var(--font-size-sm);
+  color: var(--text-subdued);
 }
 
 #playlists__list li div span img {
