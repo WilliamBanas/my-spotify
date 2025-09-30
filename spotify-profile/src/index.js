@@ -469,7 +469,7 @@ async function populateUI(
     const background = document.getElementById("background");
 
     if (!savedGradients.length) {
-        background.style.background = "none";
+        background.style.background = "var(--secondary-background)";
         currentIndex = 0;
         return;
     }
