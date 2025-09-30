@@ -56,6 +56,8 @@ Cela signifie que votre application restera en mode "Development" avec un quota 
 git clone git@github.com:WilliamBanas/my-spotify.git
 
 cd my-spotify
+
+code .
 ```
 
 ### 3. Configuration des variables d'environnement
@@ -101,7 +103,6 @@ L'application sera accessible à l'adresse `http://localhost:5173`
 │   ├── css/           # Styles CSS
 ├── public/            # Assets statiques
 ├── package.json       # Dépendances et scripts
-└── vite.config.js     # Configuration Vite
 ```
 
 ## 🎨 Personnalisation
