@@ -60,7 +60,7 @@ cd my-spotify
 
 ### 3. Configuration des variables d'environnement
 
-Créez un fichier `.env` à la racine du projet (dans spotify-profile/) avec les variables suivantes :
+Créez un fichier `.env` à la racine du projet (dans le dossier /spotify-profile) avec les variables suivantes :
 
 ```env
 VITE_SPOTIFY_CLIENT_ID=votre_client_id_spotify
