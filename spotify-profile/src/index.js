@@ -432,7 +432,7 @@ async function populateUI(
 		);
 
 		if (isSelected) {
-			spanColor.style.outline = "2px solid var(--text)";
+			spanColor.style.outline = "1px solid var(--text)";
 		}
 
 		spanColor.addEventListener("click", function (e) {
