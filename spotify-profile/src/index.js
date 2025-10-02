@@ -1,230 +1,29 @@
-console.log("Variables defined:", import.meta.env.VITE_SPOTIFY_CLIENT_ID);
-console.log("Variables defined:", import.meta.env.VITE_REDIRECT_URI);
+import { profile } from "./data";
+import { playlists } from "./data";
+import { artistsData } from "./data";
+import { tracksData } from "./data";
 
-const clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
-const redirectUri = import.meta.env.VITE_REDIRECT_URI;
+function initApp() {
 
-const params = new URLSearchParams(window.location.search);
-const code = params.get("code");
+  const personnalPlaylists = playlists.items;
+  const topArtists = artistsData.items;
+  const topTracks = tracksData.items
+  const allUserPlaylists = personnalPlaylists.length;
 
-let tokenData = JSON.parse(localStorage.getItem("spotify_token")) || null;
-let profile = JSON.parse(localStorage.getItem("spotify_profile")) || null;
-let allUserPlaylists =
-	JSON.parse(localStorage.getItem("allUserPlaylists")) || [];
-let personnalPlaylists =
-	JSON.parse(localStorage.getItem("personnalPlaylists")) || [];
-let topArtists = JSON.parse(localStorage.getItem("topArtists")) || [];
-let topTracks = JSON.parse(localStorage.getItem("topTracks")) || [];
+	populateUI(
+		profile,
+		allUserPlaylists,
+		personnalPlaylists,
+		topArtists,
+		topTracks
+	);
 
-function isTokenValid() {
-	if (!tokenData) return false;
-	const now = Date.now();
-	return tokenData.expires_at && tokenData.expires_at > now;
-}
-
-function saveToken(token, expires_in) {
-	tokenData = {
-		access_token: token,
-		expires_at: Date.now() + expires_in * 1000,
-	};
-	localStorage.setItem("spotify_token", JSON.stringify(tokenData));
-}
-
-async function initApp() {
-	try {
-		if (!isTokenValid() && !code) {
-			console.log("Token missing or expired, redirecting to auth...");
-			return redirectToAuthCodeFlow(clientId, redirectUri);
-		}
-
-		if (!isTokenValid() && code) {
-			console.log("Code found, getting access token...");
-			const newTokenData = await getAccessToken(clientId, code);
-			if (!newTokenData?.access_token) {
-				console.error("Failed to get access token.");
-				return redirectToAuthCodeFlow(clientId, redirectUri);
-			}
-			saveToken(newTokenData.access_token, newTokenData.expires_in);
-			console.log("Access token obtained ✓");
-		}
-
-		const accessToken = tokenData.access_token;
-
-		if (!profile) {
-			profile = await fetchProfile(accessToken);
-			if (!profile) console.warn("No profile data returned.");
-			else localStorage.setItem("spotify_profile", JSON.stringify(profile));
-		}
-
-		if (!allUserPlaylists.length) {
-			const playlistsData = await fetchUserPlaylists(accessToken);
-			allUserPlaylists = Array.isArray(playlistsData?.items)
-				? playlistsData.items
-				: [];
-			localStorage.setItem(
-				"allUserPlaylists",
-				JSON.stringify(allUserPlaylists)
-			);
-		}
-
-		personnalPlaylists =
-			profile?.display_name && Array.isArray(allUserPlaylists)
-				? allUserPlaylists.filter(
-						(p) => p?.owner?.display_name === profile.display_name
-				  )
-				: [];
-		localStorage.setItem(
-			"personnalPlaylists",
-			JSON.stringify(personnalPlaylists)
-		);
-
-		if (!topArtists.length) {
-			const artistsData = await fetchUserTopArtists(accessToken);
-			topArtists = Array.isArray(artistsData?.items) ? artistsData.items : [];
-			localStorage.setItem("topArtists", JSON.stringify(topArtists));
-		}
-
-		if (!topTracks.length) {
-			const tracksData = await fetchUserTopTracks(accessToken);
-			topTracks = Array.isArray(tracksData?.items) ? tracksData.items : [];
-			localStorage.setItem("topTracks", JSON.stringify(topTracks));
-		}
-
-		await populateUI(
-			profile,
-			allUserPlaylists,
-			personnalPlaylists,
-			topArtists,
-			topTracks
-		);
-	} catch (error) {
-		console.error("Error in main app flow:", error);
-	}
+  renderArtists(topArtists);
+  renderTracks(topTracks);
+  renderPlaylists(personnalPlaylists);
 }
 
 initApp();
-
-export async function redirectToAuthCodeFlow(clientId, redirectUri) {
-	const verifier = generateCodeVerifier(128);
-	const challenge = await generateCodeChallenge(verifier);
-	localStorage.setItem("verifier", verifier);
-
-	const params = new URLSearchParams();
-	params.append("client_id", clientId);
-	params.append("response_type", "code");
-	params.append("redirect_uri", redirectUri);
-	params.append(
-		"scope",
-		"user-read-private user-read-email user-top-read playlist-read-private"
-	);
-	params.append("code_challenge_method", "S256");
-	params.append("code_challenge", challenge);
-
-	document.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
-}
-
-function generateCodeVerifier(length) {
-	let text = "";
-	const possible =
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (let i = 0; i < length; i++)
-		text += possible.charAt(Math.floor(Math.random() * possible.length));
-	return text;
-}
-
-async function generateCodeChallenge(codeVerifier) {
-	const data = new TextEncoder().encode(codeVerifier);
-	const digest = await window.crypto.subtle.digest("SHA-256", data);
-	return btoa(String.fromCharCode(...new Uint8Array(digest)))
-		.replace(/\+/g, "-")
-		.replace(/\//g, "_")
-		.replace(/=+$/, "");
-}
-
-export async function getAccessToken(clientId, code) {
-	const verifier = localStorage.getItem("verifier");
-	if (!verifier) {
-		console.error("No verifier found in localStorage.");
-		return null;
-	}
-
-	const params = new URLSearchParams();
-	params.append("client_id", clientId);
-	params.append("grant_type", "authorization_code");
-	params.append("code", code);
-	params.append("redirect_uri", redirectUri);
-	params.append("code_verifier", verifier);
-
-	try {
-		const result = await fetch("https://accounts.spotify.com/api/token", {
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" },
-			body: params,
-		});
-		if (!result.ok) {
-			console.error("Token request failed with status", result.status);
-			return null;
-		}
-		return await result.json();
-	} catch (error) {
-		console.error("Error getting access token:", error);
-		return null;
-	}
-}
-
-async function fetchProfile(token) {
-	try {
-		const res = await fetch("https://api.spotify.com/v1/me", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
-		if (!res.ok) return null;
-		return await res.json();
-	} catch {
-		return null;
-	}
-}
-
-async function fetchUserPlaylists(token) {
-	try {
-		const res = await fetch("https://api.spotify.com/v1/me/playlists", {
-			headers: { Authorization: `Bearer ${token}` },
-		});
-		if (!res.ok) return { items: [] };
-		return await res.json();
-	} catch {
-		return { items: [] };
-	}
-}
-
-async function fetchUserTopArtists(token) {
-	try {
-		const res = await fetch(
-			"https://api.spotify.com/v1/me/top/artists?time_range=short_term",
-			{
-				headers: { Authorization: `Bearer ${token}` },
-			}
-		);
-		if (!res.ok) return { items: [] };
-		return await res.json();
-	} catch {
-		return { items: [] };
-	}
-}
-
-async function fetchUserTopTracks(token) {
-	try {
-		const res = await fetch(
-			"https://api.spotify.com/v1/me/top/tracks?time_range=short_term",
-			{
-				headers: { Authorization: `Bearer ${token}` },
-			}
-		);
-		if (!res.ok) return { items: [] };
-		return await res.json();
-	} catch {
-		return { items: [] };
-	}
-}
 
 function gridDisplay() {
 	const w = window.innerWidth;
@@ -320,7 +119,6 @@ function renderPlaylists(personnalPlaylists, profile) {
 	if (!personnalPlaylists || !Array.isArray(personnalPlaylists)) return;
 	playlistsList.innerHTML = "";
 	personnalPlaylists
-		.filter((playlist) => playlist.owner.display_name === profile.display_name)
 		.slice(0, 6)
 		.forEach((playlist) => {
 			const li = document.createElement("li");
