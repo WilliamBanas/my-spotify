@@ -293,24 +293,23 @@ function renderTracks(topTracks) {
 		spanTitleArtists.appendChild(spanTitle);
 		spanTitleArtists.setAttribute("class", "title");
 		const spanArtists = document.createElement("span");
-		track.artists.forEach((artist) => {
-			const anchorArtist = document.createElement("a");
-			anchorArtist.innerHTML = artist.name;
-			spanArtists.appendChild(anchorArtist);
-			spanTitleArtists.appendChild(spanArtists);
-		});
+		const artistNames = track.artists.map((artist) => artist.name).join(", ");
+		spanArtists.innerHTML = artistNames;
+		spanTitleArtists.appendChild(spanArtists);
 		const spanAlbum = document.createElement("span");
 		spanAlbum.setAttribute("class", "album");
 		spanAlbum.innerHTML = track.album.name;
 		li.appendChild(spanAlbum);
-		const ms = track.duration_ms;
-		const minutes = Math.floor(ms / 60000);
-		const seconds = Math.floor((ms % 60000) / 1000);
-		const formatted = `${minutes}:${seconds.toString().padStart(2, "0")}`;
-		const spanDuration = document.createElement("span");
-		spanDuration.setAttribute("class", "duration");
-		spanDuration.innerHTML = formatted;
-		li.appendChild(spanDuration);
+		if (window.innerWidth > 480) {
+			const ms = track.duration_ms;
+			const minutes = Math.floor(ms / 60000);
+			const seconds = Math.floor((ms % 60000) / 1000);
+			const formatted = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+			const spanDuration = document.createElement("span");
+			spanDuration.setAttribute("class", "duration");
+			spanDuration.innerHTML = formatted;
+			li.appendChild(spanDuration);
+		}
 		tracksList.appendChild(li);
 	});
 }
@@ -501,4 +500,5 @@ async function populateUI(
 
 window.addEventListener("resize", () => {
 	if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
+  if (Array.isArray(topTracks) && topTracks.length) renderTracks(topTracks);
 });

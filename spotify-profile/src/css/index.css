@@ -9,6 +9,7 @@ body {
 h1 {
 	font-family: "Gotham", Arial, sans-serif;
 	font-weight: 800;
+	font-size: var(--font-size-ultra);
 }
 
 h2,
@@ -161,7 +162,6 @@ h3 {
 }
 
 .userInfos__details > h1 {
-	font-size: var(--font-size-ultra);
 	margin-top: var(--spacing-base);
 	border-radius: 100%;
 }
@@ -203,7 +203,7 @@ h3 {
 
 .content__main {
 	width: 100%;
-  margin-top: var(--spacing-xl);
+	margin-top: var(--spacing-xl);
 }
 
 .artists__title,
@@ -315,6 +315,7 @@ h3 {
 }
 
 .mainInfos {
+	min-width: 0;
 	display: flex;
 	align-items: center;
 }
@@ -331,6 +332,8 @@ h3 {
 }
 
 .title {
+	min-width: 0;
+	overflow: hidden;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
@@ -340,12 +343,24 @@ h3 {
 .title > span:first-child {
 	color: var(--text);
 	font-size: var(--font-size-base);
+	display: block;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
 }
 
 .title > span:nth-child(2) {
 	font-size: var(--font-size-sm);
 	display: flex;
 	gap: 0.5em;
+	display: block;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
+
+.title > span:nth-child(2) a {
+	white-space: nowrap;
 }
 
 .album {
@@ -387,4 +402,82 @@ h3 {
 	box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px,
 		rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px,
 		rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+}
+
+@media (max-width: 1024px) {
+	.album {
+		display: none;
+	}
+
+	#tracks__list > li {
+		grid-template-columns:
+			[index] 30px
+			[title] minmax(150px, 5fr)
+			[duration] 60px;
+	}
+}
+
+@media (max-width: 768px) {
+	#background {
+		height: 300%;
+	}
+
+	h1 {
+		font-size: var(--font-size-4xl);
+	}
+
+	#avatar > img {
+		width: 150px;
+
+		height: 150px;
+	}
+
+	.content__header {
+		padding: var(--spacing-xl) var(--spacing-lg);
+	}
+
+	.userInfos__details {
+		padding: 0 var(--spacing-base);
+	}
+
+	.artists__title h2,
+	.tracks__title h2,
+	.playlist__title h2 {
+		font-size: var(--font-size-lg);
+	}
+
+	.wrapper {
+		padding: 0 var(--spacing-sm);
+	}
+
+	#tracks__list > li {
+		padding: 0 var(--spacing-sm);
+	}
+
+	.content__wrapper {
+		padding: var(--spacing-3xl) var(--spacing-base) var(--spacing-base)
+			var(--spacing-base);
+	}
+
+	.edit {
+		padding: var(--spacing-sm);
+	}
+}
+
+@media (max-width: 480px) {
+	#tracks__list > li {
+		grid-template-columns:
+			[index] 30px
+			[title] minmax(150px, 6fr);
+	}
+
+	.userInfos__details > ul {
+		font-size: var(--font-size-xs);
+	}
+
+	#avatar > img {
+		width: 100px;
+
+		height: 100px;
+	}
 }
