@@ -24,6 +24,25 @@ Avant de commencer, assurez-vous d'avoir installé :
 
 ## 🔧 Installation
 
+### Option 1 : Version avec données statiques (branche `static-data`)
+
+Si vous êtes sur la branche `static-data`, aucune configuration Spotify n'est nécessaire. Cette version utilise des données de démonstration.
+
+```bash
+   git clone git@github.com:WilliamBanas/my-spotify.git
+
+   cd my-spotify
+
+   code .
+
+   git checkout static-data
+
+   cd spotify-profile
+
+   npm run dev
+```
+
+### Option 2 : Version avec les données récupérées depuis l'API web Spotify branche `main`)
 ### 1. Configuration Spotify Dashboard
 
 ⚠️ **Important** : Cette étape est nécessaire car Spotify a modifié sa politique. Depuis le 15 mai 2025 :
