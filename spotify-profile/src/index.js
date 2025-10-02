@@ -395,14 +395,15 @@ async function populateUI(
 		renderPlaylists(personnalPlaylists, profile);
 
 	const gradients = [
-		{ color: "linear-gradient(180deg, #5B4B8A 0%, #2D1B4E 100%)" },
-		{ color: "linear-gradient(180deg, #3D5A80 0%, #1A2332 100%)" },
-		{ color: "linear-gradient(180deg, #4A6B5C 0%, #1E2F26 100%)" },
-		{ color: "linear-gradient(180deg, #6B3E5A 0%, #2E1A26 100%)" },
-		{ color: "linear-gradient(180deg, #576574 0%, #242B33 100%)" },
-		{ color: "linear-gradient(180deg, #3D6B6B 0%, #1A2E2E 100%)" },
-		{ color: "linear-gradient(180deg, #6B5444 0%, #2E231C 100%)" },
-		{ color: "linear-gradient(180deg, #4A5F7F 0%, #1F2937 100%)" },
+		{ color: "linear-gradient(180deg, #6B5B9A 0%, #3D2B5E 100%)" }, // Violet
+		{ color: "linear-gradient(180deg, #4D6A90 0%, #2A3342 100%)" }, // Bleu foncé
+		{ color: "linear-gradient(180deg, #4A8B5A 0%, #254D2E 100%)" }, // Vert forêt
+		{ color: "linear-gradient(180deg, #C85A5A 0%, #6B2E2E 100%)" }, // Rouge brique
+		{ color: "linear-gradient(180deg, #8B6A4D 0%, #3E3323 100%)" }, // Brun/Orange
+		{ color: "linear-gradient(180deg, #4D7B7B 0%, #2A3E3E 100%)" }, // Turquoise foncé
+		{ color: "linear-gradient(180deg, #D4A855 0%, #6B5428 100%)" }, // Jaune doré
+		{ color: "linear-gradient(180deg, #5A8FAF 0%, #2A4757 100%)" }, // Bleu ciel foncé
+		{ color: "linear-gradient(180deg, #B85A8B 0%, #5D2A43 100%)" }, // Rose/Mauve
 	];
 
 	const editBackgroundButton = document.getElementById("edit__button");
@@ -426,7 +427,7 @@ async function populateUI(
 
 		const normalizeGradient = (grad) => grad.replace(/\s+/g, " ").trim();
 
-    // si la condition est bonne retourne true
+		// si la condition est bonne retourne true
 		const isSelected = savedGradients.some(
 			(saved) => normalizeGradient(saved) === normalizeGradient(gradient.color)
 		);
@@ -436,22 +437,24 @@ async function populateUI(
 		}
 
 		spanColor.addEventListener("click", function (e) {
-      let savedGradients = JSON.parse(localStorage.getItem("selectedGradients")) || [];
-      // retourne l'index du premier élément qui correspond sinon retourne -1
+			let savedGradients =
+				JSON.parse(localStorage.getItem("selectedGradients")) || [];
+			// retourne l'index du premier élément qui correspond sinon retourne -1
 			const index = savedGradients.findIndex(
-      saved => normalizeGradient(saved) === normalizeGradient(gradient.color)
-    );
-    
-    if (index === -1) {
-      savedGradients.push(gradient.color);
-      spanColor.style.outline = "1px solid var(--text)";
-    } else {
-      savedGradients.splice(index, 1);
-      spanColor.style.outline = "none";
-    }
-    
-    localStorage.setItem("selectedGradients", JSON.stringify(savedGradients));
-    startBackgroundRotation();
+				(saved) =>
+					normalizeGradient(saved) === normalizeGradient(gradient.color)
+			);
+
+			if (index === -1) {
+				savedGradients.push(gradient.color);
+				spanColor.style.outline = "1px solid var(--text)";
+			} else {
+				savedGradients.splice(index, 1);
+				spanColor.style.outline = "none";
+			}
+
+			localStorage.setItem("selectedGradients", JSON.stringify(savedGradients));
+			startBackgroundRotation();
 		});
 		spanColor.style.background = gradient.color;
 		li.appendChild(spanColor);
@@ -462,24 +465,25 @@ async function populateUI(
 	let intervalId = null;
 
 	function startBackgroundRotation() {
-    let savedGradients = JSON.parse(localStorage.getItem("selectedGradients")) || [];
+		let savedGradients =
+			JSON.parse(localStorage.getItem("selectedGradients")) || [];
 
 		if (intervalId) clearInterval(intervalId);
 
-    const background = document.getElementById("background");
+		const background = document.getElementById("background");
 
-    if (!savedGradients.length) {
-        background.style.background = "var(--secondary-background)";
-        currentIndex = 0;
-        return;
-    }
+		if (!savedGradients.length) {
+			background.style.background = "var(--secondary-background)";
+			currentIndex = 0;
+			return;
+		}
 
-    if (currentIndex >= savedGradients.length) {
-        currentIndex = 0;
-    }
+		if (currentIndex >= savedGradients.length) {
+			currentIndex = 0;
+		}
 
 		background.style.background = savedGradients[currentIndex];
-		
+
 		// si il y a plus d'un item dans le tableau
 		// on met un intervale de 5 sec
 		// on passe a l'index suivant et si le modulo de current index + 1 est égal a 0
@@ -498,5 +502,3 @@ async function populateUI(
 window.addEventListener("resize", () => {
 	if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
 });
-
-// https://accounts.spotify.com/authorize?client_id=4c2a191ee8ff41d0a9775c708fe59c25&response_type=code&redirect_uri=undefined&scope=user-read-private+user-read-email+user-top-read+playlist-read-private&code_challenge_method=S256&code_challenge=hdc_gOKdZv8KHOoB43rZ9vO9qcjxmnYzjNxLWgH742Q
