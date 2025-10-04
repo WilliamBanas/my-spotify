@@ -25,6 +25,7 @@
 :root {
 	--primary-background: #000000;
 	--secondary-background: #181818;
+  --tertiary-background: rgba(0, 0, 0, 0.3);
 	--accent: #1db954;
 	--primary: rgba(255, 255, 255, 1);
 	--text: rgba(255, 255, 255, 1);
