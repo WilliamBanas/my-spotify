@@ -2,14 +2,79 @@ import { profile } from "./data";
 import { playlists } from "./data";
 import { artistsData } from "./data";
 import { tracksData } from "./data";
+import { backgroundPhotosUi, getBackgroundPhotos } from "./scripts/backgroundPhotosUi";
+
+const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
 const personnalPlaylists = playlists.items;
 const topArtists = artistsData.items;
 const topTracks = tracksData.items;
 const allUserPlaylists = personnalPlaylists.length;
 
-function initApp() {
-	populateUI(
+let backgroundPhotos = JSON.parse(localStorage.getItem("savedPhotos")) || [];
+
+let bgIntervalId = null;
+let bgCurrentIndex = 0;
+
+function startBackgroundRotation() {
+	if (bgIntervalId) {
+		clearInterval(bgIntervalId);
+		bgIntervalId = null;
+	}
+
+	const background = document.getElementById("background");
+	if (!background) return;
+
+	const savedPhotos = JSON.parse(localStorage.getItem("selectedPhotos")) || [];
+	const savedGradients =
+		JSON.parse(localStorage.getItem("selectedGradients")) || [];
+
+	if (savedPhotos.length > 0) {
+		bgCurrentIndex = bgCurrentIndex % savedPhotos.length;
+		background.style.backgroundImage = `url(${savedPhotos[bgCurrentIndex]})`;
+		background.style.backgroundSize = "cover";
+		background.style.backgroundPosition = "center";
+
+		if (savedPhotos.length > 1) {
+			bgIntervalId = setInterval(() => {
+				bgCurrentIndex = (bgCurrentIndex + 1) % savedPhotos.length;
+				background.style.backgroundImage = `url(${savedPhotos[bgCurrentIndex]})`;
+			}, 5000);
+		}
+		return;
+	}
+
+	if (savedGradients.length > 0) {
+		bgCurrentIndex = bgCurrentIndex % savedGradients.length;
+		background.style.background = savedGradients[bgCurrentIndex];
+
+		if (savedGradients.length > 1) {
+			bgIntervalId = setInterval(() => {
+				bgCurrentIndex = (bgCurrentIndex + 1) % savedGradients.length;
+				background.style.background = savedGradients[bgCurrentIndex];
+			}, 5000);
+		}
+		return;
+	}
+
+	// Fallback
+	background.style.background = "var(--secondary-background)";
+	background.style.backgroundImage = "";
+}
+
+// ---------------- INIT APP ----------------
+async function initApp() {
+
+  if (!backgroundPhotos || backgroundPhotos.length === 0) {
+		const fetched = await getBackgroundPhotos(ACCESS_KEY);
+		if (!fetched) console.warn("No photos returned.");
+		else {
+			backgroundPhotos = fetched;
+			localStorage.setItem("savedPhotos", JSON.stringify(backgroundPhotos));
+		}
+	}
+
+	await populateUI(
 		profile,
 		allUserPlaylists,
 		personnalPlaylists,
@@ -20,10 +85,21 @@ function initApp() {
 	renderArtists(topArtists);
 	renderTracks(topTracks);
 	renderPlaylists(personnalPlaylists);
+
+	// Charger photos Unsplash si besoin
+	if (!backgroundPhotos || backgroundPhotos.length === 0) {
+		const fetched = await getBackgroundPhotos(ACCESS_KEY);
+		if (!fetched) console.warn("No photos returned.");
+		else {
+			backgroundPhotos = fetched;
+			localStorage.setItem("savedPhotos", JSON.stringify(backgroundPhotos));
+		}
+	}
 }
 
 initApp();
 
+// ---------------- RESPONSIVE GRID ----------------
 function gridDisplay() {
 	const w = window.innerWidth;
 	if (w < 768) return 2;
@@ -34,6 +110,7 @@ function gridDisplay() {
 	return 7;
 }
 
+// ---------------- RENDER ARTISTS ----------------
 function renderArtists(topArtists) {
 	const artistsList = document.getElementById("artists__list");
 	if (!artistsList || !Array.isArray(topArtists)) return;
@@ -65,6 +142,7 @@ function renderArtists(topArtists) {
 	});
 }
 
+// ---------------- RENDER TRACKS ----------------
 function renderTracks(topTracks) {
 	const tracksList = document.getElementById("tracks__list");
 	if (!topTracks || !Array.isArray(topTracks)) return;
@@ -103,17 +181,20 @@ function renderTracks(topTracks) {
 			const ms = track.duration_ms;
 			const minutes = Math.floor(ms / 60000);
 			const seconds = Math.floor((ms % 60000) / 1000);
-			const formatted = `${minutes}:${seconds.toString().padStart(2, "0")}`;
+			const formatted = `${minutes}:${seconds
+				.toString()
+				.padStart(2, "0")}`;
 			const spanDuration = document.createElement("span");
 			spanDuration.setAttribute("class", "duration");
 			spanDuration.innerHTML = formatted;
-      li.appendChild(spanDuration);
+			li.appendChild(spanDuration);
 		}
 
 		tracksList.appendChild(li);
 	});
 }
 
+// ---------------- RENDER PLAYLISTS ----------------
 function renderPlaylists(personnalPlaylists, profile) {
 	const playlistsList = document.getElementById("playlists__list");
 	if (!personnalPlaylists || !Array.isArray(personnalPlaylists)) return;
@@ -141,6 +222,7 @@ function renderPlaylists(personnalPlaylists, profile) {
 	});
 }
 
+// ---------------- UI PRINCIPALE ----------------
 async function populateUI(
 	profile,
 	allUserPlaylists,
@@ -179,123 +261,127 @@ async function populateUI(
 	const playlistsEl = document.getElementById("playlists");
 	if (playlistsEl)
 		playlistsEl.innerText =
-			(Array.isArray(personnalPlaylists) ? personnalPlaylists.length : 0) > 1
+			(Array.isArray(personnalPlaylists)
+				? personnalPlaylists.length
+				: 0) > 1
 				? `${personnalPlaylists.length} public playlists`
 				: `${personnalPlaylists?.length || 0} public playlist`;
 
 	if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
-
 	if (Array.isArray(topTracks) && topTracks.length) renderTracks(topTracks);
-
 	if (Array.isArray(personnalPlaylists) && personnalPlaylists.length)
 		renderPlaylists(personnalPlaylists, profile);
 
+	// ----------- Couleurs disponibles -----------
 	const gradients = [
-		{ color: "linear-gradient(180deg, #6B5B9A 0%, #3D2B5E 100%)" }, // Violet
-		{ color: "linear-gradient(180deg, #4D6A90 0%, #2A3342 100%)" }, // Bleu foncé
-		{ color: "linear-gradient(180deg, #4A8B5A 0%, #254D2E 100%)" }, // Vert forêt
-		{ color: "linear-gradient(180deg, #C85A5A 0%, #6B2E2E 100%)" }, // Rouge brique
-		{ color: "linear-gradient(180deg, #8B6A4D 0%, #3E3323 100%)" }, // Brun/Orange
-		{ color: "linear-gradient(180deg, #4D7B7B 0%, #2A3E3E 100%)" }, // Turquoise foncé
-		{ color: "linear-gradient(180deg, #D4A855 0%, #6B5428 100%)" }, // Jaune doré
-		{ color: "linear-gradient(180deg, #5A8FAF 0%, #2A4757 100%)" }, // Bleu ciel foncé
-		{ color: "linear-gradient(180deg, #B85A8B 0%, #5D2A43 100%)" }, // Rose/Mauve
+		{ color: "linear-gradient(180deg, #6B5B9A 0%, #3D2B5E 100%)" },
+		{ color: "linear-gradient(180deg, #4D6A90 0%, #2A3342 100%)" },
+		{ color: "linear-gradient(180deg, #4A8B5A 0%, #254D2E 100%)" },
+		{ color: "linear-gradient(180deg, #C85A5A 0%, #6B2E2E 100%)" },
+		{ color: "linear-gradient(180deg, #8B6A4D 0%, #3E3323 100%)" },
+		{ color: "linear-gradient(180deg, #4D7B7B 0%, #2A3E3E 100%)" },
+		{ color: "linear-gradient(180deg, #D4A855 0%, #6B5428 100%)" },
+		{ color: "linear-gradient(180deg, #5A8FAF 0%, #2A4757 100%)" },
+		{ color: "linear-gradient(180deg, #B85A8B 0%, #5D2A43 100%)" },
 	];
 
 	const editBackgroundButton = document.getElementById("edit__button");
 	const modal = document.getElementById("modal");
 
-	editBackgroundButton.addEventListener("click", function (e) {
+	editBackgroundButton.addEventListener("click", (e) => {
 		e.stopPropagation();
 		modal.classList.toggle("modal-showed");
 	});
 
-	modal.addEventListener("click", function (e) {
-		e.stopPropagation();
-	});
+	modal.addEventListener("click", (e) => e.stopPropagation());
 
-	const colorList = document.getElementById("colors__list");
+	// Création des options couleurs
+	const colorList = document.createElement("ul");
+	colorList.setAttribute("id", "colors__list");
+	modal.appendChild(colorList);
+
 	let savedGradients =
 		JSON.parse(localStorage.getItem("selectedGradients")) || [];
+
+	const normalizeGradient = (grad) => grad.replace(/\s+/g, " ").trim();
+
 	gradients.forEach((gradient) => {
 		const li = document.createElement("li");
 		const spanColor = document.createElement("span");
+		spanColor.style.width = "96px";
+		spanColor.style.height = "54px";
+		spanColor.style.display = "inline-block";
+		spanColor.style.borderRadius = "8px";
+		spanColor.style.cursor = "pointer";
+		spanColor.style.background = gradient.color;
 
-		const normalizeGradient = (grad) => grad.replace(/\s+/g, " ").trim();
-
-		// si la condition est bonne retourne true
 		const isSelected = savedGradients.some(
 			(saved) => normalizeGradient(saved) === normalizeGradient(gradient.color)
 		);
+		if (isSelected) spanColor.style.outline = "1px solid var(--text)";
 
-		if (isSelected) {
-			spanColor.style.outline = "1px solid var(--text)";
-		}
-
-		spanColor.addEventListener("click", function (e) {
-			let savedGradients =
-				JSON.parse(localStorage.getItem("selectedGradients")) || [];
-			// retourne l'index du premier élément qui correspond sinon retourne -1
-			const index = savedGradients.findIndex(
-				(saved) =>
-					normalizeGradient(saved) === normalizeGradient(gradient.color)
+		spanColor.addEventListener("click", () => {
+			if (localStorage.getItem("selectedPhotos")) {
+				localStorage.removeItem("selectedPhotos");
+			}
+			let current = JSON.parse(localStorage.getItem("selectedGradients")) || [];
+			const index = current.findIndex(
+				(saved) => normalizeGradient(saved) === normalizeGradient(gradient.color)
 			);
 
 			if (index === -1) {
-				savedGradients.push(gradient.color);
+				current.push(gradient.color);
 				spanColor.style.outline = "1px solid var(--text)";
 			} else {
-				savedGradients.splice(index, 1);
+				current.splice(index, 1);
 				spanColor.style.outline = "none";
 			}
 
-			localStorage.setItem("selectedGradients", JSON.stringify(savedGradients));
+			localStorage.setItem("selectedGradients", JSON.stringify(current));
 			startBackgroundRotation();
 		});
-		spanColor.style.background = gradient.color;
+
 		li.appendChild(spanColor);
 		colorList.appendChild(li);
 	});
 
-	let currentIndex = 0;
-	let intervalId = null;
+	// Création de la liste photos
+	await backgroundPhotosUi(backgroundPhotos, startBackgroundRotation);
 
-	function startBackgroundRotation() {
-		let savedGradients =
-			JSON.parse(localStorage.getItem("selectedGradients")) || [];
+	// Binding des boutons Colors et Photos APRÈS la création des deux listes
+	const colorsButton = document.getElementById("colorsButton");
+	const photosButton = document.getElementById("photosButton");
 
-		if (intervalId) clearInterval(intervalId);
+	// Initialiser le bouton Colors comme actif par défaut
+	if (colorsButton) colorsButton.classList.add("active");
 
-		const background = document.getElementById("background");
+	if (colorsButton) {
+		colorsButton.addEventListener("click", () => {
+			const photoList = document.getElementById("photos__list");
+			const colorList = document.getElementById("colors__list");
+			if (photoList) photoList.style.display = "none";
+			if (colorList) colorList.style.display = "grid";
+			colorsButton.classList.add("active");
+			if (photosButton) photosButton.classList.remove("active");
+		});
+	}
 
-		if (!savedGradients.length) {
-			background.style.background = "var(--secondary-background)";
-			currentIndex = 0;
-			return;
-		}
-
-		if (currentIndex >= savedGradients.length) {
-			currentIndex = 0;
-		}
-
-		background.style.background = savedGradients[currentIndex];
-
-		// si il y a plus d'un item dans le tableau
-		// on met un intervale de 5 sec
-		// on passe a l'index suivant et si le modulo de current index + 1 est égal a 0
-		// alors on revient au premier index du tableau
-		if (savedGradients.length > 1) {
-			intervalId = setInterval(() => {
-				currentIndex = (currentIndex + 1) % savedGradients.length;
-				background.style.background = savedGradients[currentIndex];
-			}, 5000);
-		}
+	if (photosButton) {
+		photosButton.addEventListener("click", () => {
+			const colorList = document.getElementById("colors__list");
+			const photoList = document.getElementById("photos__list");
+			if (colorList) colorList.style.display = "none";
+			if (photoList) photoList.style.display = "grid";
+			photosButton.classList.add("active");
+			if (colorsButton) colorsButton.classList.remove("active");
+		});
 	}
 
 	startBackgroundRotation();
 }
 
+// ---------------- RESIZE ----------------
 window.addEventListener("resize", () => {
 	if (Array.isArray(topArtists) && topArtists.length) renderArtists(topArtists);
-  if (Array.isArray(topTracks) && topTracks.length) renderTracks(topTracks);
+	if (Array.isArray(topTracks) && topTracks.length) renderTracks(topTracks);
 });
