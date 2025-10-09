@@ -515,6 +515,10 @@ h3 {
 	#tracks__list > li > span:first-child {
 		margin-right: 0;
 	}
+
+  .header {
+    padding: var(--spacing-xl) var(--spacing-base);
+  }
 }
 
 @media (max-width: 480px) {
