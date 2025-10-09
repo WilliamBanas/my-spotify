@@ -246,10 +246,10 @@ async function populateUI(
 		}
 	}
 
-	const productEl = document.getElementById("product");
-	if (productEl)
-		productEl.innerText =
-			profile.product === "premium" ? "Premium" : "Free plan";
+	// const productEl = document.getElementById("product");
+	// if (productEl)
+	// 	productEl.innerText =
+	// 		profile.product === "premium" ? "Premium" : "Free plan";
 
 	const followersEl = document.getElementById("followers");
 	if (followersEl)
