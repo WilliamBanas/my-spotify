@@ -3,6 +3,7 @@ import { playlists } from "./data";
 import { artistsData } from "./data";
 import { tracksData } from "./data";
 import { backgroundPhotosUi, getBackgroundPhotos } from "./scripts/backgroundPhotosUi";
+import { createInfoModal, getArtistInfos, getTrackInfos } from "./scripts/infoModal";
 
 const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
 
@@ -57,7 +58,6 @@ function startBackgroundRotation() {
 		return;
 	}
 
-	// Fallback
 	background.style.background = "var(--secondary-background)";
 	background.style.backgroundImage = "";
 }
@@ -86,7 +86,8 @@ async function initApp() {
 	renderTracks(topTracks);
 	renderPlaylists(personnalPlaylists);
 
-	// Charger photos Unsplash si besoin
+  createInfoModal();
+
 	if (!backgroundPhotos || backgroundPhotos.length === 0) {
 		const fetched = await getBackgroundPhotos(ACCESS_KEY);
 		if (!fetched) console.warn("No photos returned.");
@@ -130,7 +131,14 @@ function renderArtists(topArtists) {
 		divTitle.className = "divTitle";
 		const spanName = document.createElement("span");
 		spanName.className = "divTitle__name";
-		spanName.innerText = artist.name || "Unknown";
+    const pName = document.createElement('p');
+    //
+    pName.addEventListener("click", (e) => {
+      getArtistInfos(artist);      
+    })
+    //
+		pName.innerText = artist.name || "Unknown";
+    spanName.appendChild(pName)
 		const spanType = document.createElement("span");
 		spanType.className = "divTitle__type";
 		spanType.innerText = artist.type || "artist";
@@ -166,6 +174,9 @@ function renderTracks(topTracks) {
 		divMainInfos.appendChild(spanTitleArtists);
 		const spanTitle = document.createElement("span");
 		spanTitle.innerText = track.name || "Unknown Track";
+    spanTitle.addEventListener("click", (e) => {
+      getTrackInfos(track);
+    })
 		spanTitleArtists.appendChild(spanTitle);
 		spanTitleArtists.setAttribute("class", "title");
 		const spanArtists = document.createElement("span");
@@ -245,11 +256,6 @@ async function populateUI(
 			avatarEl.appendChild(img);
 		}
 	}
-
-	// const productEl = document.getElementById("product");
-	// if (productEl)
-	// 	productEl.innerText =
-	// 		profile.product === "premium" ? "Premium" : "Free plan";
 
 	const followersEl = document.getElementById("followers");
 	if (followersEl)

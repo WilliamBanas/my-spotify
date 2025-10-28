@@ -4,6 +4,7 @@ body {
 	font-size: var(--font-size-base);
 	background-color: var(--primary-background);
 	color: var(--text);
+  position: relative;
 }
 
 h1 {
@@ -39,6 +40,47 @@ h3 {
 	padding: 0 var(--spacing-lg);
 	box-sizing: border-box;
 	border-radius: 8px;
+}
+
+.infoModal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.infoModal__container {
+  box-sizing: border-box;
+  position: absolute;
+  top: 50%;                   
+  left: 50%;              
+  transform: translate(-50%, -50%);
+  width: 800px;
+  max-width: 95vw;
+  height: fit-content;
+  background-color: var(--secondary-background);
+  padding: var(--spacing-xl);
+}
+
+.infoModal__container > img {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: var(--spacing-base);
+  cursor: pointer;
+}
+
+.infoModal__container > h3 {
+  font-size: var(--font-size-xl);
+  margin-bottom: var(--spacing-lg);
+}
+
+.infoModal__container > p {
+  font-size: var(--font-size-lg);
 }
 
 .content {
@@ -345,6 +387,18 @@ h3 {
 	font-size: var(--font-size-base);
 }
 
+.divTitle__name {
+ 
+} 
+
+.divTitle__name > p {
+  display: block;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	overflow: hidden;
+  cursor: help;
+}
+
 .divTitle__type {
 	color: var(--text-subdued);
 	text-transform: capitalize;
@@ -409,6 +463,7 @@ h3 {
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	overflow: hidden;
+  cursor: help;
 }
 
 .title > span:nth-child(2) {
